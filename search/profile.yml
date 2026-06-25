@@ -1,0 +1,54 @@
+# search/profile.yml
+# Target role, constraints, and search preferences.
+# Reviewed against actual documents — correct anything that drifts toward what sounds good.
+
+target_role:
+  # Specific enough to drive the sponsorship scorer and fit score.
+  title: "Backend / distributed-systems software engineer"
+  level: "early-career (0-3 yrs post-degree)"   # see gaps.md row on seniority — confirm this matches the roles you'll actually apply to
+  soc_code: "15-1252.00"                          # O*NET Software Developers (Job Zone 4)
+  description: >
+    Backend engineer building distributed, event-driven services (REST/gRPC,
+    messaging, observability) at scale. Trajectory toward distributed-systems
+    specialization, not infra-platform specialist from day one.
+
+geography:
+  mode: "relocate"          # open to relocating within the US
+  base: "Boston, MA"
+  remote_ok: true
+  constraints: "none stated — relocation acceptable anywhere in US"
+
+industry:
+  sectors:
+    - "manufacturing / semiconductor"
+    - "fintech / financial services"
+    - "enterprise IT / data infrastructure"
+  company_stage:
+    - "series_a_to_c"
+    - "public_established"
+  excluded_stages:
+    - "seed_pre_series_a"   # excluded BECAUSE of sponsorship gate below, not by preference
+  hard_exclusions: []       # confirmed none — open to any domain
+
+sponsorship:
+  required: true            # HARD GATE: a company with no sponsorship history is Skip regardless of fit
+  reason: "F-1; will require H-1B sponsorship after OPT/STEM-OPT window"
+  gate_behavior: "skip_if_no_sponsorship_history"
+
+visa:
+  status: "F-1"
+  program: "MS Information Systems, Northeastern (completing 2026-08)"
+  opt:
+    status: "not_yet_started"        # post-completion OPT begins after graduation
+    unemployment_days_used: 0
+    unemployment_ceiling_days: 90
+    buffer_target_days: 80           # book recommends staying ~80, below the 90-day ceiling
+  stem_eligible: true                # DSO CONFIRMED — defensible as a gate
+  stem_opt_extension_months: 24      # STEM-OPT adds 24 months beyond initial 12-month OPT
+  authorization_end_date: null       # ACTION: fill once OPT card dates are known; null until EAD issued
+
+search_preferences:
+  prioritize:
+    - "sponsorship_history"          # gate
+    - "fit_score"
+    - "timeline_factor"              # roles that move fast enough to clear before OPT clock pressure
