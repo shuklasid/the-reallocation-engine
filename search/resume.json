@@ -1,0 +1,154 @@
+{
+  "attested": true,
+  "attested_date": "2026-06-25",
+  "attestation_note": "Three errors corrected: (1) Teradyne work reframed from 'event-driven backend system components' to UI components + API integration — original dropped the WPF/UI half to fit a backend narrative; (2) removed unverifiable metric 'improved fault tolerance by 35%' (fault tolerance is not a measurable percentage); (3) MedSignal corrected from implied solo ownership to team project (contributor, not sole owner).",
+
+  "person": {
+    "name": "Siddharth Shukla",
+    "location": "Boston, MA",
+    "email": "shukla.sid@northeastern.edu",
+    "phone": "508-381-9741",
+    "linkedin": "linkedin.com/in/siddharth-shukla12"
+  },
+
+  "education": [
+    {
+      "id": "edu-neu",
+      "institution": "Northeastern University",
+      "location": "Boston, US",
+      "degree": "Master of Science in Information Systems",
+      "gpa": 3.73,
+      "end_date": "2026-08",
+      "status": "in_progress"
+    },
+    {
+      "id": "edu-mumbai",
+      "institution": "University of Mumbai",
+      "location": "India",
+      "degree": "Bachelor of Engineering in Information Technology",
+      "gpa": 3.80,
+      "end_date": "2022-05",
+      "status": "completed"
+    }
+  ],
+
+  "experience": [
+    {
+      "id": "exp-teradyne",
+      "title": "Software Engineer Co-op",
+      "company": "Teradyne",
+      "location": "Boston, USA",
+      "start_date": "2025-06",
+      "end_date": "2025-12",
+      "employment_type": "co-op",
+      "highlights": [
+        {
+          "claim": "Implemented UI components (WPF) and API integration in C# for diagnostics and system state transitions; validated service interfaces across a multi-component system",
+          "metric": "reduced manual-intervention scenarios by 30%",
+          "verifiable": "unverified"
+        },
+        {
+          "claim": "Conducted CPU/memory profiling, log analysis, and root cause analysis to diagnose production performance issues across multi-component failures; documented corrective actions",
+          "metric": null,
+          "verifiable": "unverified"
+        },
+        {
+          "claim": "Architected a caching and lazy-loading strategy using delegate-based factories for efficient resource access",
+          "metric": "reduced initial memory consumption by 30%, improved responsiveness by 25%",
+          "verifiable": "unverified"
+        },
+        {
+          "claim": "Built reusable test utilities and service mocks contributing to CI/CD pipelines (GoCD)",
+          "metric": "reduced flaky test failures by 40%",
+          "verifiable": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "exp-idfc",
+      "title": "Software Engineer",
+      "company": "IDFC First Bank",
+      "location": "Mumbai, India",
+      "start_date": "2022-06",
+      "end_date": "2024-07",
+      "employment_type": "full_time",
+      "highlights": [
+        {
+          "claim": "Designed Java/Spring Boot backend services with validated REST API contracts for high-volume financial transaction workflows",
+          "metric": "improved throughput by 20%, reduced latency by 20% under peak traffic",
+          "verifiable": "unverified"
+        },
+        {
+          "claim": "Implemented Apache Kafka for high-throughput asynchronous messaging between distributed services, improving system decoupling and fault tolerance",
+          "metric": null,
+          "verifiable": "qualitative — removed invented '35%' figure; fault tolerance not measurable as a percentage"
+        },
+        {
+          "claim": "Designed data access layers with optimized SQL queries, indexing, and caching for low-latency retrieval against large financial datasets",
+          "metric": "reduced query execution time by 40%",
+          "verifiable": "unverified"
+        },
+        {
+          "claim": "Built CI/CD pipelines (Jenkins) for automated build/test/deploy to Kubernetes with Docker",
+          "metric": "cut deployment time by 25%, rollback incidents by 20%",
+          "verifiable": "unverified"
+        },
+        {
+          "claim": "Instrumented applications for observability with Prometheus and Grafana (metrics, structured logging, distributed tracing)",
+          "metric": "reduced production downtime by 30%",
+          "verifiable": "unverified"
+        }
+      ]
+    }
+  ],
+
+  "projects": [
+    {
+      "id": "proj-medsignal",
+      "name": "MedSignal — Distributed Signal Detection Platform",
+      "location": "Boston, USA",
+      "date": "2025",
+      "role": "team — contributor",
+      "highlights": [
+        "Python/FastAPI backend with validated REST API contracts; Pydantic v2 validation and OpenAPI specs",
+        "Data access layer with Redis caching + Bloom-filter dedup for low-latency retrieval across 16M+ records, processed with Spark Structured Streaming",
+        "Deployed via Docker Compose with structured logging, latency benchmarking, performance dashboards",
+        "Contributed to unit/integration/SLA test automation with pytest and testcontainers"
+      ]
+    },
+    {
+      "id": "proj-peorgair",
+      "name": "PE Org-AI-R — Private Equity AI Readiness Platform",
+      "location": "Boston, USA",
+      "start_date": "2026-02",
+      "end_date": "2026-03",
+      "role": "team — contributor",
+      "highlights": [
+        "FastAPI backend with SSE streaming + React analytics dashboard; structured logging, latency benchmarking, performance dashboards on AWS",
+        "LangChain agentic workflows synthesizing 69–300+ signals per company into structured outputs stored in Snowflake, integrated via REST API"
+      ]
+    },
+    {
+      "id": "proj-loan",
+      "name": "Real-Time Loan Processing & Management System",
+      "location": "Mumbai, India",
+      "start_date": "2023-10",
+      "end_date": "2024-02",
+      "role": "unspecified",
+      "highlights": [
+        "Spring Boot platform for real-time loan disbursement/approval; RESTful APIs with optimized PostgreSQL schemas, stored procedures, indexing for high-volume low-latency transactional workloads",
+        "Improved operational efficiency by 25%"
+      ]
+    }
+  ],
+
+  "skills": {
+    "languages": ["Java", "Python", "JavaScript", "SQL", "C#"],
+    "backend_apis": ["Spring Boot", "REST APIs", "RPC-style services", "Apache Kafka", "API contract design", "microservices"],
+    "containerization_cloud": ["Docker", "Kubernetes", "AWS (S3, EC2, IAM)", "Azure", "service meshes", "load balancers"],
+    "data_processing": ["Spark Structured Streaming", "ETL", "batch processing", "FastAPI"],
+    "cicd": ["Jenkins", "GoCD", "Git", "Maven"],
+    "observability": ["Prometheus", "Grafana", "structured logging", "distributed tracing", "metrics instrumentation"],
+    "debugging_qa": ["CPU/memory profiling", "log analysis", "root cause analysis", "JUnit", "pytest", "testcontainers", "Selenium"]
+  }
+}
