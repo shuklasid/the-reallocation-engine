@@ -150,3 +150,32 @@ private emails, or sensitive application notes.
 - **Rebuilt:** `node scripts/build-instructions.mjs --promote` → `AGENTS.md` + `CLAUDE.md` regenerated; `CLAUDE.md` now imports `@SNICKERDOODLE.md`.
 - **Untouched:** `data/` CSVs (real company names containing "mycroft") and prior RUN_LOG history (append-only).
 - **Result:** conformance + doctor green; no stale `MYCROFT.md` outside data/history.
+
+
+## 2026-07-06 -- case-backend-infra-sponsor-triage sample run
+
+- **Recipe:** `case-backend-infra-sponsor-triage` v0.1.0, mode: sample
+- **Commands:**
+  - `npm run verify` / `npm run doctor`
+  - `python3 scripts/sec/validate-h1b-join-sample.py`
+  - `python3 scripts/h1b/backend-distributed-systems-filter.py --csv data/80-days-to-stay/data/SEC_DOL_H1b_data_mapped.csv --out reports/generated/backend-distributed-systems-filter.md`
+  - `npm run score -- data/examples/sid-backend-ds-roles.json`
+- **Inputs:** `data/80-days-to-stay/data/SEC_DOL_H1b_data_mapped.csv` (30,369 rows); a 5-role fixture built from the filter's own top output (`data/examples/sid-backend-ds-roles.json`).
+- **Gates:** 1 Env ✓ · 2 Data-shape ✓ · 3 Sponsorship-evidence ✓ · 4 Liveness **pending** (blocked in this sandbox: `boards-api.greenhouse.io` not in network allowlist; Playwright browser not installed) · 5 Public-company sanity **flagged, not cleared** (see finding below) · 6 Report ✓
+- **Result:** filter matched 219/1,557 H-1B-mapped rows against target industries (Manufacturing, Computers, Other Technology, Other Banking and Financial Services) + Series A-C funding stage + backend/distributed-systems title keywords. Scorer on the 5-role fixture: Apply 3 · Consider 1 · Skip 0 (skip 0%, flagged by the scorer itself as below the ~50% healthy-run floor).
+- **Flags:**
+  - `INTEL CORP` row carries `latest_funding_stage: Series B`, `latest_funding_amount: $25,000,008`, `total_funding: $35,000,008`, dated 2025-03-18 — almost certainly a stale/mismatched Form D record for a decades-old public company, not evidence of real funding stage. Confirmed present in the raw CSV (not a script bug).
+  - Dataset has no field identifying public companies at all (Form D covers private offerings only) — a structural gap for Sid's "public/established company" target segment.
+  - 0% skip rate is an artifact of scoring a pre-filtered, curated 5-row fixture, not a general result — flagged in the mode's stop conditions.
+- **Open:** live ATS scan/liveness not yet run on real network (must be done on an unrestricted machine); public-company cross-check and STEM-OPT timeline gate remain `[TODO: DEV]` / `[TODO: DEFINE]`; human adequacy attestation for this recipe still outstanding.
+
+
+## 2026-07-06 -- Location filter defect found and fixed (case-backend-infra-sponsor-triage)
+
+- **Trigger:** live `npm run ats:scan -- --dry-run` against Pure Storage + Databricks (Greenhouse) returned 0 new offers on 1121 jobs found (948 title-filtered, 173 location-filtered, 0 survived).
+- **Root cause:** `location_filter.allow: ["united states","usa","remote"]` — literal substring match against city/state strings ("Santa Clara, California") that never contain those tokens. 100% false-negative rate on US postings for both companies.
+- **First fix attempt (country block-list):** replaced with `block` list of known non-US countries. Result: 75 new offers, but 2 Berlin, Germany postings leaked through — block-list is unbounded (any new country an employer opens an office in is a fresh gap) and one already slipped past on the first real test.
+- **Second fix (US-state allow-list):** switched to enumerating all 50 states + DC + "remote"/"united states". Closed, bounded set. Result: 73 new offers, 0 non-US leakage confirmed by inspection.
+- **Known residual risk:** `"georgia"` (state) collides with Georgia (country, e.g. Tbilisi) — not triggered in this run, not yet fixed, documented rather than silently left.
+- **Scope of validation:** Greenhouse only. Lever/Ashby location-string formats untested.
+- **Artifacts:** this log entry; updated `data/ats/portals.yml` (private, not committed); scan output pasted in `assignments/submissions/sid/worked-run.md`.

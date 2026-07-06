@@ -1,0 +1,32 @@
+[
+  { "role_id": "arista-swe", "company": "Arista Networks (Series A tag, Other Technology)", "title": "Software Engineer -- backend/networking platform",
+    "sponsorship": { "p": 0.85, "tier": "Proven", "source": "record" },
+    "fit": { "p": 0.75, "source": "model-judgment" },
+    "liveness": { "factor": 1.0, "source": "assumed-not-verified" },
+    "timeline": { "factor": 0.9, "source": "your-input" } },
+
+  { "role_id": "purestorage-mts", "company": "Pure Storage (Series C tag, Other Technology)", "title": "Member of Technical Staff -- distributed storage",
+    "sponsorship": { "p": 0.85, "tier": "Proven", "source": "record" },
+    "fit": { "p": 0.8, "source": "model-judgment" },
+    "liveness": { "factor": 1.0, "source": "assumed-not-verified" },
+    "timeline": { "factor": 0.9, "source": "your-input" } },
+
+  { "role_id": "docusign-backend", "company": "Docusign (Series B tag, Other Technology)", "title": "Sr. Software Engineer -- backend services",
+    "sponsorship": { "p": 0.85, "tier": "Proven", "source": "record" },
+    "fit": { "p": 0.65, "source": "model-judgment" },
+    "liveness": { "factor": 1.0, "source": "assumed-not-verified" },
+    "timeline": { "factor": 0.9, "source": "your-input" } },
+
+  { "role_id": "intel-swe-flagged", "company": "Intel Corp (funding_stage field tagged 'Series B' in the mapped CSV -- almost certainly a stale/mismatched Form D record, not evidence Intel is early-stage)", "title": "Software Engineer",
+    "sponsorship": { "p": 0.85, "tier": "Proven", "source": "record" },
+    "fit": { "p": 0.7, "source": "model-judgment" },
+    "liveness": { "factor": 1.0, "source": "assumed-not-verified" },
+    "timeline": { "factor": 0.9, "source": "your-input" },
+    "override": { "decision": "Investigate manually", "reason": "Cross-checked: Intel is a decades-old public company; the $35M Form D dated 2025-03-18 is not representative of Intel's actual funding status. Do not trust funding_stage for large/well-known companies without a public-company cross-check." } },
+
+  { "role_id": "early-stage-nosponsor", "company": "Early-stage fintech, no H-1B history in mapped CSV", "title": "Backend Engineer",
+    "sponsorship": { "p": 0.05, "tier": "None", "source": "record" },
+    "fit": { "p": 0.85, "source": "model-judgment" },
+    "liveness": { "factor": 1.0, "source": "assumed-not-verified" },
+    "timeline": { "factor": 0.9, "source": "your-input" } }
+]
