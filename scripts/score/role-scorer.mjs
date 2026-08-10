@@ -79,12 +79,32 @@ function scoreRole(role, weights, needsSponsor) {
 
   const voteSum = votes.reduce((s, v) => s + v.p * v.weight, 0);
 
-  // gates (multipliers)
-  const liveness = num(role.liveness?.factor) ?? 1;
-  const timeline = num(role.timeline?.factor) ?? 1;
+  // gates (multipliers). MISSING gate data (the key absent, or a non-numeric
+  // factor) is NOT the same as a verified-open gate: absence of evidence is
+  // not evidence of an open gate. A missing liveness/timeline check must be
+  // treated as CLOSED (fail-closed), not defaulted to 1 (fail-open) --
+  // otherwise a role whose liveness was never checked at all can still be
+  // recommended Apply purely because nothing said it wasn't live. This is
+  // the target bug the gate-behavior harness (scripts/test/gate-behavior-harness.mjs)
+  // was built to catch: see reports/gate-behavior-harness-attestation.md.
+  const livenessRaw = num(role.liveness?.factor);
+  const timelineRaw = num(role.timeline?.factor);
+  const livenessMissing = livenessRaw == null;
+  const timelineMissing = timelineRaw == null;
+  // Clamp to [0,1]: a gate factor is a confidence/probability and must not
+  // exceed 1 or go below 0. An out-of-range value (e.g. 1.8, from a
+  // corrupted upstream record) would otherwise multiply INTO the
+  // composite and inflate it above what the votes alone justify -- found
+  // via a deliberate break attempt on the missing-data fix above; see
+  // reports/gate-behavior-harness-honest-run.md.
+  const clamp01 = (x) => (x == null ? x : Math.max(0, Math.min(1, x)));
+  const liveness = clamp01(livenessRaw) ?? 0;
+  const timeline = clamp01(timelineRaw) ?? 0;
   const gates = [
-    { key: 'liveness', factor: liveness, source: role.liveness?.source || SRC.record },
-    { key: 'timeline', factor: timeline, source: role.timeline?.source || SRC.input },
+    { key: 'liveness', factor: liveness, missing: livenessMissing,
+      source: livenessMissing ? 'missing' : (role.liveness?.source || SRC.record) },
+    { key: 'timeline', factor: timeline, missing: timelineMissing,
+      source: timelineMissing ? 'missing' : (role.timeline?.source || SRC.input) },
   ];
   const gateProduct = gates.reduce((s, g) => s * g.factor, 1);
   const composite = voteSum * gateProduct;
@@ -94,7 +114,9 @@ function scoreRole(role, weights, needsSponsor) {
   let rec, reason;
   if (closedGate) {
     rec = 'Skip';
-    reason = `gated: ${closedGate.key} ≈ ${fmt(closedGate.factor)} (a closed gate zeroes the composite regardless of votes)`;
+    reason = closedGate.missing
+      ? `gated: ${closedGate.key} data MISSING (upstream never verified it) -- treated as closed, not open (fail-closed, per verified-data contract)`
+      : `gated: ${closedGate.key} ≈ ${fmt(closedGate.factor)} (a closed gate zeroes the composite regardless of votes)`;
   } else if (composite >= CONFIG.apply_threshold) {
     const tier = (role.sponsorship?.tier || '').toLowerCase();
     const softSponsor = needsSponsor && tier && CONFIG.soft_sponsorship_tiers.includes(tier);

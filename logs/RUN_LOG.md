@@ -150,3 +150,21 @@ private emails, or sensitive application notes.
 - **Rebuilt:** `node scripts/build-instructions.mjs --promote` → `AGENTS.md` + `CLAUDE.md` regenerated; `CLAUDE.md` now imports `@SNICKERDOODLE.md`.
 - **Untouched:** `data/` CSVs (real company names containing "mycroft") and prior RUN_LOG history (append-only).
 - **Result:** conformance + doctor green; no stale `MYCROFT.md` outside data/history.
+
+Why: disambiguate this repo's constitution from the shared Mycroft agent-OS frame it was forked from. Renamed to a cookie-recipe name fitting the book's "recipe" vocabulary.
+Did: `git mv MYCROFT.md SNICKERDOODLE.md`; rebranded the file's own identity (`# SNICKERDOODLE`, "Snickerdoodle is an agent-operating system…", lineage line preserved). Swapped every `MYCROFT.md` path/governance reference (instructions/ source, `conformance.mjs` required-files list, `manifest.yml` `@import`, CI comment, `DOMAIN.md`, `status.md`, `archive/README.md`, docs/). Rebranded this-repo "Mycroft" prose (P4, "a Snickerdoodle domain", audit doc); kept the cross-repo "Madison and Mycroft" shared-library mention.
+Rebuilt: `node scripts/build-instructions.mjs --promote` → `AGENTS.md` + `CLAUDE.md` regenerated; `CLAUDE.md` now imports `@SNICKERDOODLE.md`.
+Untouched: `data/` CSVs (real company names containing "mycroft") and prior RUN_LOG history (append-only).
+Result: conformance + doctor green; no stale `MYCROFT.md` outside data/history.
+2026-08-06 -- gate-behavior-harness: found and fixed a real gate-as-vote bug
+Recipe: `gate-behavior-harness` v1.0.0, mode: live
+Trigger: Ch.16/Appendix 98 capstone contribution -- built a test harness proving `role-scorer.mjs`'s liveness/timeline gates zero the composite regardless of votes.
+Found (before fix): a role with a MISSING liveness or timeline field (not 0, just absent) was scored as if the gate were fully open (`?? 1` default), reaching "Apply" with composite 0.556-0.617 despite never having been liveness-checked. 4/6 harness scenarios passed, 2 failed on this exact case.
+Fixed: changed the default from fail-open (`?? 1`) to fail-closed (`?? 0`), with the reason string explicitly distinguishing "MISSING" from "explicitly measured zero" for audit clarity.
+Break-attempt finding (second bug, same patch): an out-of-range gate factor (e.g. 1.8) was not clamped and inflated the composite (0.585) above what the votes alone justify (0.325 ceiling). Fixed with a `clamp01` to [0,1]. Disclosed as a scope extension beyond the recipe's original target, not hidden.
+Result: 7/7 harness scenarios pass against the patched scorer. 0 regressions on `data/examples/ch11-roles.json` (only the `generated` timestamp differs). 0 drift between the recipe and its card (after fixing one real formatting-caused drift in the recipe itself).
+Ethics gate: `npm run verify` and `npm run doctor` both clean; no `data/ats/` or private paths staged; doctor's recipe-frontmatter scanner doesn't distinguish `.card.md` from a recipe -- gave the card minimal frontmatter, documented as a disclosed workaround, not a hidden one.
+Artifacts: `scripts/test/gate-behavior-harness.mjs`, `scripts/test/drift-check.mjs`, `recipes/gate-behavior-harness.md`, `recipes/gate-behavior-harness.card.md`, `reports/gate-behavior-harness-attestation.md`, `reports/gate-behavior-harness-honest-run.md`, patch to `scripts/score/role-scorer.mjs`.
+Open: production frequency of missing/out-of-range upstream gate values is unknown -- this contribution proves the scorer's behavior on constructed inputs, not how often real upstream feeds actually produce them.
+
+
