@@ -166,5 +166,19 @@ Result: 7/7 harness scenarios pass against the patched scorer. 0 regressions on 
 Ethics gate: `npm run verify` and `npm run doctor` both clean; no `data/ats/` or private paths staged; doctor's recipe-frontmatter scanner doesn't distinguish `.card.md` from a recipe -- gave the card minimal frontmatter, documented as a disclosed workaround, not a hidden one.
 Artifacts: `scripts/test/gate-behavior-harness.mjs`, `scripts/test/drift-check.mjs`, `recipes/gate-behavior-harness.md`, `recipes/gate-behavior-harness.card.md`, `reports/gate-behavior-harness-attestation.md`, `reports/gate-behavior-harness-honest-run.md`, patch to `scripts/score/role-scorer.mjs`.
 Open: production frequency of missing/out-of-range upstream gate values is unknown -- this contribution proves the scorer's behavior on constructed inputs, not how often real upstream feeds actually produce them.
+- **Rebuilt:** `node scripts/build-instructions.mjs --promote` → `AGENTS.md` + `CLAUDE.md` regenerated; `CLAUDE.md` now imports `@SNICKERDOODLE.md`.
+- **Untouched:** `data/` CSVs (real company names containing "mycroft") and prior RUN_LOG history (append-only).
+- **Result:** conformance + doctor green; no stale `MYCROFT.md` outside data/history.
+
+## 2026-08-16 -- gate-behavior-harness v1.1.0: added property-based fuzz testing
+
+- **Recipe:** `gate-behavior-harness` v1.1.0, mode: live
+- **Trigger:** TA feedback on final capstone direction -- "testing the boundaries," "stretch testing every claim." Added a property-based fuzz test (`scripts/test/fuzz-invariants.mjs`) alongside the existing fixed-scenario harness, since fixed scenarios only prove the specific cases chosen, not the general property.
+- **Found (before fix, fuzz test):** 196/300 randomly generated adversarial inputs (65%) violated basic invariants against the unpatched scorer -- including a negative composite score (-0.005) from an unclamped negative liveness factor (-0.5). This is a stronger, more general confirmation of the same class of bug the fixed harness found, discovered independently via random search rather than hand-picked cases.
+- **Result after fix:** fixed harness 7/7 pass; fuzz test 0/300 violations, confirmed stable across 5 additional seeds (1,500 further randomized adversarial cases, 0 violations). 0 regressions on `data/examples/ch11-roles.json`. 0 drift between recipe and card.
+- **Ethics gate:** `npm run verify` and `npm run doctor` both clean.
+- **Artifacts:** `scripts/test/fuzz-invariants.mjs` (new), updated `recipes/gate-behavior-harness.md` / `.card.md` (v1.1.0), updated attestation and honest-run reports, human sign-off added to attestation.
+- **Open:** same as v1.0.0 -- production frequency of missing/malformed upstream gate values remains unknown; this only proves the consequence, not the frequency.
+
 
 

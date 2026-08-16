@@ -3,7 +3,7 @@ status: RUNNABLE-LIVE
 todos_open: 0
 last_gate: "logs/RUN_LOG.md#gate-behavior-harness"
 attestation: "reports/gate-behavior-harness-attestation.md"
-recipe_version: 1.0.0
+recipe_version: 1.1.0
 type: card
 ---
 
@@ -11,100 +11,98 @@ type: card
 
 ## 1. Purpose
 
-Proves that the Bayesian Role Scorer's `liveness` and `timeline` fields
-behave as hard gates (can zero the composite regardless of votes) rather
-than as soft votes (can only nudge the score) — and closes a real gap
-found while proving it: missing gate data was silently treated as a fully
-open gate.
+Proves that the Bayesian Role Scorer's `liveness`/`timeline` fields behave
+as hard gates rather than soft votes, using both fixed scenarios and a
+property-based fuzz test — and closes two real gaps found while proving
+it: missing gate data was treated as fully open, and out-of-range gate
+values weren't clamped.
 
 ## 2. What it can verify / what it cannot verify on its own
 
-**Can verify:** that the scorer, run for real on constructed fixtures,
-produces the correct recommendation for six specific, checkable scenarios
-covering explicit-zero, boundary, healthy, and missing-field cases.
+**Can verify:** the scorer's behavior on both hand-picked and hundreds of
+randomly generated adversarial inputs, deterministically reproducible via
+`--seed`.
 
-**Cannot verify on its own:** whether the *upstream* scripts that are
-supposed to populate `liveness`/`timeline` in production actually ever
-omit those fields in practice — this harness proves the scorer's behavior
-*if* they do, not how often they do. That's a separate, unaddressed
-question a maintainer should track (e.g. via logging how often the
-`missing` source label appears in real runs).
+**Cannot verify on its own:** how often real upstream feeds actually
+produce missing or out-of-range gate values in production — this proves
+the *consequence* if they do, not the *frequency* that they do.
 
 ## 3. Dependencies
 
-- Reads/calls: `scripts/score/role-scorer.mjs` (the component under test).
-- Reads: `data/examples/ch11-roles.json` (for the regression check only).
+- Reads/calls: `scripts/score/role-scorer.mjs`.
+- Reads: `data/examples/ch11-roles.json` (regression check only).
 - Writes: `reports/generated/gate-behavior-harness-results.json`,
-  temp files under the OS temp directory (cleaned up after each run).
-- Assumes no other recipe ran first — this harness is self-contained and
-  builds its own fixtures.
+  `reports/generated/fuzz-invariants-results.json`, temp files (cleaned up
+  after each run).
+- Assumes no other recipe ran first — both suites are self-contained.
 
 ## 4. How to run — annotated
 
 ```
 node scripts/test/gate-behavior-harness.mjs
 ```
-Notice: the console prints one PASS/FAIL line per scenario with the
-expected behavior and the actual scorer output side by side. A `0` exit
-code and "6/6 scenarios passed" means the gate is currently behaving
-correctly. Anything less is a real defect, not a test artifact.
+Notice: one PASS/FAIL line per fixed scenario. 7/7 and exit 0 means the
+gate is currently correct.
+
+```
+node scripts/test/fuzz-invariants.mjs --n 300 --seed 42
+```
+Notice: prints a violation with the exact failing JSON input if any of the
+3 invariants break. A clean run prints one summary line and exits 0. Using
+the same `--seed` always regenerates the identical sequence of test cases
+— a violation is always reproducible, never a one-off flake.
 
 ```
 node scripts/score/role-scorer.mjs data/examples/ch11-roles.json --out-dir /tmp/regression-check
 ```
-Notice: compare the resulting `role-scores.json` against the checked-in
-`data/examples/role-scores.json` — only the `generated` date should
-differ. Any other difference means the fix changed behavior beyond its
-intended scope.
+Notice: compare the result against the checked-in
+`data/examples/role-scores.json` — only `generated` should differ.
 
 ```
 node scripts/test/drift-check.mjs recipes/gate-behavior-harness.md recipes/gate-behavior-harness.card.md
 ```
-Notice: prints any command that appears in the recipe but not this card,
-or vice versa. Empty output means no drift.
+Notice: prints any command mismatch between this card and its recipe.
 
 ## 5. What it produces
 
-- `reports/generated/gate-behavior-harness-results.json` — machine log of
-  every scenario, real recommendation, real composite, real reason string.
-- Console output showing 6/6 PASS against the current scorer.
-- A `logs/RUN_LOG.md` entry recording the before/after run and the fix.
-- A good run's audit: every scenario's `actual_reason` string names
-  exactly which gate closed and why (explicit value vs. missing data) —
-  if a reason string is vague ("gated: unknown"), that itself is a sign
-  the harness or scorer regressed.
+- `reports/generated/gate-behavior-harness-results.json` — machine log,
+  7 fixed scenarios, real recommendation/composite/reason each.
+- `reports/generated/fuzz-invariants-results.json` — machine log, N random
+  cases, violation count, the exact seed used.
+- Console output: 7/7 fixed PASS, 0 fuzz violations, against the current
+  scorer.
+- A `logs/RUN_LOG.md` entry.
+- A good run's audit: every fixed scenario's `actual_reason` string names
+  which gate closed and why (explicit-zero vs. missing vs. clamped
+  out-of-range) — a vague reason string ("gated: unknown") signals a
+  regression even if the PASS/FAIL count still looks fine.
 
 ## 6. How it fails — named failure modes
 
-1. **Harness passes against a reimplementation, not the real script.**
-   Cause: if `SCORER` path resolution breaks (e.g. run from the wrong
-   working directory) and `execFileSync` silently falls back or errors in
-   a way that gets swallowed. Specific to this setup: the harness resolves
-   `scripts/score/role-scorer.mjs` relative to `process.cwd()` — running
-   it from a subdirectory instead of the repo root will fail loudly (file
-   not found), not silently pass.
-2. **Fixture cleanup race.** Cause: the harness writes to an OS temp
-   directory and removes it at the end; if the process is killed mid-run
-   (Ctrl-C), stale fixture directories accumulate under `/tmp/gate-harness-*`
-   and are harmless but should be manually cleared if disk space matters.
+1. **Harness/fuzz test passes against a reimplementation, not the real
+   script.** Cause: `SCORER` path resolution breaks if run from the wrong
+   working directory — fails loudly (file not found), does not silently
+   pass, but a maintainer should confirm the path in the console header
+   line matches the real repo path before trusting a PASS.
+2. **Fuzz test flakiness masquerading as a real bug, or vice versa.**
+   Cause: this risk is specifically why the fuzz test uses a seeded PRNG
+   (mulberry32) instead of `Math.random()` — the same `--seed` always
+   regenerates the identical sequence, so "it failed once and I can't
+   reproduce it" should never happen. If it does, that itself is a bug in
+   the fuzz harness's determinism, not in the scorer, and should be
+   reported as such.
 3. **Drift — this card describes commands the recipe no longer runs.**
-   Cause: if `scripts/test/gate-behavior-harness.mjs` is renamed, moved,
-   or its CLI arguments change, and only the recipe is updated (or only
-   this card is updated) in a later commit. Specific detection: run
+   Cause: if any of the four stored scripts are renamed or their CLI
+   arguments change and only one of the recipe/card is updated. Detection:
    `node scripts/test/drift-check.mjs recipes/gate-behavior-harness.md
-   recipes/gate-behavior-harness.card.md` — any mismatch printed means
-   this card has drifted from the recipe it documents and must be
-   corrected to match the recipe (the executable recipe is ground truth,
-   never edit the recipe to match a stale card).
-4. **Contract violation — the harness produces no real output and a model
-   fills the gap.** Cause: if `execFileSync` throws and the catch block's
-   `{error, stdout, stderr}` object gets passed to `s.assert()` instead of
-   a real scored role, the assertion function will throw (accessing
-   `.machine_recommendation` on an object that doesn't have it), which the
-   harness currently catches and marks as a FAIL — this is correct
-   behavior (fail loudly), but if that catch-and-fail logic were ever
-   "simplified" to catch-and-skip, a broken scorer invocation could
-   silently vanish from the results instead of counting as a failure.
-   Detection: the harness's `fail_count` should equal the actual number of
-   `pass: false` entries in the written JSON log — verify these match, not
-   just that the console said "PASS."
+   recipes/gate-behavior-harness.card.md` — any mismatch means this card
+   has drifted and must be corrected to match the recipe (recipe is
+   ground truth, never edit the recipe to match a stale card).
+4. **Contract violation — a suite produces no real output and a model
+   fills the gap.** Cause: if `execFileSync` throws and the resulting
+   error object gets passed into an assertion instead of a real scored
+   role, both suites' assertion logic will throw and get caught as a
+   FAIL, not silently skipped — this is correct behavior. Detection: the
+   written JSON logs' `fail_count`/`violations` fields should always match
+   the actual count of failing entries; verify these match, not just that
+   the console said "PASS" or printed a clean summary line.

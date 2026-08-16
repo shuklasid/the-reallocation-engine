@@ -14,8 +14,6 @@ if (!recipePath || !cardPath) {
   process.exit(2);
 }
 
-// Extract fenced code-block lines that look like an invocable command
-// (start with node/npm/python3/git — the command families this repo uses).
 function extractCommands(text) {
   const commands = new Set();
   const fenceRe = /```(?:[a-z]*\n)?([\s\S]*?)```/g;
@@ -24,8 +22,6 @@ function extractCommands(text) {
     for (const line of m[1].split('\n')) {
       const trimmed = line.trim();
       if (/^(node|npm|python3?|git)\s/.test(trimmed)) {
-        // normalize whitespace so cosmetic formatting differences don't
-        // register as drift
         commands.add(trimmed.replace(/\s+/g, ' '));
       }
     }

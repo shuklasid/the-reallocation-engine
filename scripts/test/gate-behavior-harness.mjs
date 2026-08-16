@@ -14,6 +14,10 @@
 // Exit code 0 = all scenarios pass. Exit code 1 = at least one scenario
 // failed — this is the harness's job: to fail loudly when the gate behaves
 // like a vote, and to pass once it doesn't.
+//
+// See also: scripts/test/fuzz-invariants.mjs, which proves the same
+// underlying property (gates cannot be voted around) holds across hundreds
+// of randomly generated adversarial inputs, not just the fixed cases below.
 
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -23,9 +27,6 @@ import path from 'node:path';
 const SCORER = path.resolve('scripts/score/role-scorer.mjs');
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'gate-harness-'));
 
-// Fixed, high votes so any failure to gate would clearly show up as a
-// composite well above the apply_threshold (0.30) instead of being masked
-// by a naturally low score.
 const HIGH_VOTES = {
   sponsorship: { p: 0.95, tier: 'Proven', source: 'record' },
   fit: { p: 0.95, source: 'model-judgment' },
@@ -73,13 +74,13 @@ const scenarios = [
   },
   {
     name: 'THE TARGET BUG -- missing liveness field entirely (not 0, just absent), high votes',
-    overrides: { timeline: { factor: 0.9, source: 'your-input' } }, // liveness key omitted entirely
+    overrides: { timeline: { factor: 0.9, source: 'your-input' } },
     assert: (r) => r.machine_recommendation === 'Skip' || r.trace.gates.find((g) => g.factor === 'liveness')?.multiplier <= 0.05,
     expectation: 'MISSING liveness must be treated as a CLOSED gate (fail-closed) -- absence of evidence is not evidence of an open gate',
   },
   {
     name: 'THE TARGET BUG -- missing timeline field entirely (not 0, just absent), high votes',
-    overrides: { liveness: { factor: 1.0, source: 'record' } }, // timeline key omitted entirely
+    overrides: { liveness: { factor: 1.0, source: 'record' } },
     assert: (r) => r.machine_recommendation === 'Skip' || r.trace.gates.find((g) => g.factor === 'timeline')?.multiplier <= 0.05,
     expectation: 'MISSING timeline must be treated as a CLOSED gate (fail-closed)',
   },
@@ -110,7 +111,6 @@ for (const s of scenarios) {
 console.log(`\n${scenarios.length - failCount}/${scenarios.length} scenarios passed.`);
 fs.rmSync(TMP, { recursive: true, force: true });
 
-// write a machine-readable log for the honest-run report to cite exactly
 fs.mkdirSync('reports/generated', { recursive: true });
 fs.writeFileSync('reports/generated/gate-behavior-harness-results.json', JSON.stringify({ ran_at: new Date().toISOString(), scenarios: results, fail_count: failCount, total: scenarios.length }, null, 2));
 
